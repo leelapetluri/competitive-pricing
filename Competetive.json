@@ -1,0 +1,425 @@
+{
+  "name": "Competetive",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -272,
+        32
+      ],
+      "id": "a5e6284e-6a78-4f45-bdd4-bdde8abc3660",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9fb4a34f-d0a1-4a07-981f-4f9243c8ac87",
+              "name": "product_price",
+              "value": "= {{ $json.product_price }} ",
+              "type": "number"
+            },
+            {
+              "id": "000a9faa-52ab-43a9-adf7-2bc6f434f8f1",
+              "name": "=competitor_price",
+              "value": "= {{ $json.competitor_price }}",
+              "type": "number"
+            },
+            {
+              "id": "50ac378a-0256-4722-85be-28423463b96c",
+              "name": "our_price",
+              "value": "25000",
+              "type": "string"
+            },
+            {
+              "id": "54b13205-a1c4-4a6b-ad3f-2f711b36a24e",
+              "name": "cost_price",
+              "value": "20000",
+              "type": "string"
+            },
+            {
+              "id": "5fd16003-a685-479c-98ef-ed78ff94cfb9",
+              "name": "minimum_margin_percent",
+              "value": "20",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        32
+      ],
+      "id": "0346733f-8139-4b9e-8fe9-90d486a08207",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bd1f8ce9-587b-451a-acc0-c61bd5464795",
+              "leftValue": "={{ $json.competitor_price }}",
+              "rightValue": "={{ $json.cost_price }}",
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1200,
+        32
+      ],
+      "id": "486e2bb5-6605-4928-866e-f5992614e513",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze this competitor price change:\n\nProduct: {{ $json.product_name }}\nCompetitor: {{ $json.competitor_name }}\nOur current price: ₹{{ $json.our_price }}\nProduct cost: ₹{{ $json.product_cost }}\nCompetitor's previous price: ₹{{ $json.previous_competitor_price }}\nCompetitor's current price: ₹{{ $json.competitor_price }}\nMinimum profit margin: {{ $json.minimum_margin_percent }}%\n\nExplain the price change and recommend a safe selling price.\nDo not recommend a price below the minimum margin.\nGive a short explanation and a clear recommendation.",
+        "options": {
+          "systemMessage": "You are a helpfYou are a competitive pricing analysis agent.\n\nYour task is to analyze competitor price changes and\nrecommend safe pricing actions.\n\nAlways protect the minimum profit margin.\nNever suggest a selling price below the product cost\nplus the required profit margin.\n\nExplain your recommendation clearly.\nDo not change any real product prices.ul assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1456,
+        16
+      ],
+      "id": "11c18a89-9bd2-433f-971a-2727432e5d0d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        240
+      ],
+      "id": "7191abaf-d2b0-4c4c-8130-7a4500dc02b2",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0C4UVD4GB1",
+          "mode": "list",
+          "cachedResultName": "new-channel"
+        },
+        "text": "=🚨 COMPETITIVE PRICE ALERT  {{ $json.output }}  Please review the AI recommendation before making any price changes.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1840,
+        -16
+      ],
+      "id": "b53cf77e-a372-4ce7-8a4c-eab1461e7437",
+      "name": "Send a message",
+      "webhookId": "34349486-2d43-46cd-a655-a3b0e28e1a4d",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "b5Wec2kdzrQtCREr",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://dl.flipkart.com/s/a4C65HuuuN",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        32,
+        -48
+      ],
+      "id": "a6826b47-8d36-451b-b17e-4556435a7546",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $input.first().json.body || $input.first().json.data || \"\";\n\nconst prices = [...html.matchAll(/₹\\s*([\\d,]+)/g)]\n  .map(m => Number(m[1].replace(/,/g, \"\")))\n  .filter(p => p > 100 && p < 1000000);\n\nreturn [\n  {\n    json: {\n      product_price: prices[0] || null\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        -48
+      ],
+      "id": "9ff821fb-466c-4f30-b657-81f2b7239367",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "url": " https://amzn.in/d/03mS3hFc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        48,
+        192
+      ],
+      "id": "078e1966-c41d-4357-ad5f-6171ad3d62d3",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nconst html =\n  input.body ||\n  input.data ||\n  input.html ||\n  JSON.stringify(input);\n\nconst matches = [...html.matchAll(/(?:₹|Rs\\.?|INR)\\s*([\\d,]+)/gi)]\n  .map(m => Number(m[1].replace(/,/g, \"\")))\n  .filter(p => p >= 10000 && p <= 30000);\n\nreturn [{\n  json: {\n    competitor_price: matches[0] || null,\n    prices_found: matches\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        176
+      ],
+      "id": "5513167a-4855-4f47-b9e4-0549e21057bb",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        512,
+        32
+      ],
+      "id": "2b3161f5-441c-4ac0-8aaf-00ceaf19c0f7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ourPrice = Number($json.our_price);\nconst competitorPrice = Number($json.competitor_price);\nconst costPrice = Number($json.cost_price);\nconst marginPercent = Number($json.minimum_margin_percent);\n\nconst minimumSafePrice = costPrice * (1 + marginPercent / 100);\n\nreturn [{\n  json: {\n    our_price: ourPrice,\n    competitor_price: competitorPrice,\n    cost_price: costPrice,\n    minimum_margin_percent: marginPercent,\n    minimum_safe_price: minimumSafePrice\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        32
+      ],
+      "id": "1e06bb59-cf9a-4973-95f7-f0096daa4533",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8ca2941b-9cf5-4a28-a770-b778a8862361",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6ba2fd237b6291272c50a909d10fb52aa88620eb7b3442644c76a60d45ba0353"
+  },
+  "nodeGroups": [],
+  "id": "rm0F0RaNJ6HvmJ0x",
+  "tags": []
+}
